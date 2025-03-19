@@ -48,6 +48,3 @@ This project is a Retrieval-Augmented Generation (RAG) chatbot that uses PDF doc
 - `pdf/`: Directory to store uploaded PDF files.
 - `Chroma-DB/`: Directory to store the Chroma vector store.
 
-## License
-
-This project is licensed under the MIT License.
