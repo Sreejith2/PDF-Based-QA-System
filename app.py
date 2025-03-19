@@ -1,14 +1,15 @@
 import streamlit as st
 import os
-import getpass
 import time
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_mistralai import MistralAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
+from langchain_mistralai import ChatMistralAI
 
+# Set the API key directly
+os.environ["MISTRAL_API_KEY"] = "ihGDSKPXfiWUHl4SL3GIdrtSGrzPs1oS"
 
 template = """
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
@@ -16,24 +17,21 @@ Question: {question}
 Context: {context} 
 Answer:
 """
-if not os.environ.get("MISTRAL_API_KEY"):
-    os.environ["MISTRAL_API_KEY"] = getpass.getpass("Enter API key for Mistral AI: ")
 
 pdfs_directory = './pdf/'
 
 embeddings = MistralAIEmbeddings(
     model="mistral-embed"
 )
+
 vector_store = Chroma(
     embedding_function=embeddings,
     persist_directory='./Chroma-DB'
 )
 
-from langchain_mistralai import ChatMistralAI
-
-model =  ChatMistralAI(
-    model = 'mistral-small-latest',
-    mistral_api_key = os.environ["MISTRAL_API_KEY"],
+model = ChatMistralAI(
+    model='mistral-small-latest',
+    mistral_api_key=os.environ["MISTRAL_API_KEY"],
     temperature=0
 )
 
@@ -63,7 +61,6 @@ def index_docs(all_splits):
         vector_store.add_documents(documents=batch)
         print(f"Added documents {i}-{i + len(batch)}")
         time.sleep(3)
-        
 
 def retrieve_docs(query):
     return vector_store.similarity_search(query)
@@ -75,7 +72,8 @@ def answer_question(question, documents):
 
     return chain.invoke({"question": question, "context": context})
 
-print("-"*30)
+print("-" * 30)
+
 if "uploaded_file" in st.session_state:
     st.write("File indexed successfully, ask your questions now!")
 else:
@@ -104,9 +102,7 @@ prompt = st.chat_input("Ask your question")
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
-
         st.session_state.messages.append({"role": "user", "content": prompt})
-
 
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
